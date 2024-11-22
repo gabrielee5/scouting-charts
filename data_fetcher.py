@@ -110,15 +110,12 @@ class BybitDataFetcher:
             
             # Calculate start time based on interval type
             if interval in ['D', 'W', 'M']:
-                # For daily/weekly/monthly, we just need to go back enough days
                 start_time = end_time - (days * 24 * 60 * 60 * 1000)
             else:
-                # For minute-based intervals
                 interval_minutes = int(interval) if isinstance(interval, str) else interval
                 start_time = end_time - (interval_minutes * 60 * 1000 * points_needed)
             
-            logging.info(f"Fetching {points_needed} points for {symbol} "
-                        f"({interval} intervals, {days} days)")
+            logging.info(f"Fetching {points_needed} points for {symbol}")
             
             response = self.session.get_kline(
                 category="linear",
@@ -145,6 +142,9 @@ class BybitDataFetcher:
             # Convert other columns to numeric
             for col in ['open', 'high', 'low', 'close', 'volume', 'turnover']:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+            # Sort data by timestamp in ascending order
+            df = df.sort_values('timestamp').reset_index(drop=True)
             
             # Cache the data
             if use_cache:
